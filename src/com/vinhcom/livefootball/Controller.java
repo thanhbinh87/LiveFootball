@@ -17,9 +17,19 @@ public class Controller extends MIDlet implements ActionListener {
   private String EXIT = "exit";
   private String LIST = "list";
   private String TREE = "tree";
-  private String HREF_TEMPLATE = "";
-  private String TYPE_TEMPLATE = "";
-  private String NAME_TEMPLATE = "";
+  private String TYPE_STARTS_WITH = "\"type\": \"";
+  private String HREF_STARTS_WITH = "\"href\": \"";
+  private String NAME_STARTS_WITH = "\"name\": \"";
+  private String FORM_TITLE_STARTS_WITH = "\"form_title\": \"";
+  private String LEFT_BUTTON_STARTS_WITH = "\"left_button\": \"";
+  private String RIGHT_BUTTON_STARTS_WITH = "\"right_button\": \"";
+  private String DEFAULT_ENDS_WITH = "\"";
+  private String ITEMS_STARTS_WITH = "\"items\": [";
+  private String ITEMS_ENDS_WITH = "]";
+  private String ITEMS_SPLITS_WITH = "},";
+
+  private String theme_path = "/com/vinhcom/livefootball/default.res";
+  private String theme = "default";
   
 
   private String root_url = "http://localhost:4001";
@@ -36,25 +46,32 @@ public class Controller extends MIDlet implements ActionListener {
    *
    */
   private void list_display(String json_string) {
-    String form_title = Utilities.get_text(json_string, "\"form_title\": \"", "\"");
+    String form_title = Utilities.get_text(json_string, FORM_TITLE_STARTS_WITH,
+                                                        DEFAULT_ENDS_WITH);
     form = new Form(form_title);  // tạo form với tên form lấy được trong chuỗi trả về
     list = new List();
     form.setLayout(new BorderLayout());
-    String items_string = Utilities.get_text(json_string, "\"items\": [", "]");
+    String items_string = Utilities.get_text(json_string, ITEMS_STARTS_WITH,
+                                                          ITEMS_ENDS_WITH);
     String items[];
-    items = Utilities.split(items_string, "},");
+    items = Utilities.split(items_string, ITEMS_SPLITS_WITH);
     for (int i = 0; i < items.length; i++) {
-      String item = Utilities.get_text(items[i], "\"name\": \"", "\"");
+      String item = Utilities.get_text(items[i], NAME_STARTS_WITH,
+                                                 DEFAULT_ENDS_WITH);
       list.addItem(item);
-      String href = root_url + "/" + Utilities.get_text(items[i], "\"href\": \"", "\"");
+      String href = root_url + "/" 
+                  + Utilities.get_text(items[i], HREF_STARTS_WITH,
+                                                 DEFAULT_ENDS_WITH);
       href_list.addElement(href);
     }
     form.addComponent(BorderLayout.CENTER, list);
     form.show();
 
     // Phân tích chuỗi trả về, lấy ra quy định bố trí nút bấm
-    String left_button = Utilities.get_text(json_string, "\"left_button\": \"", "\"");
-    String right_button = Utilities.get_text(json_string, "\"right_button\": \"", "\"");
+    String left_button = Utilities.get_text(json_string, LEFT_BUTTON_STARTS_WITH,
+                                                         DEFAULT_ENDS_WITH);
+    String right_button = Utilities.get_text(json_string, RIGHT_BUTTON_STARTS_WITH,
+                                                          DEFAULT_ENDS_WITH);
 
     if (left_button.equals(SELECT)) {
       form.addCommand(select_command);
@@ -99,7 +116,8 @@ public class Controller extends MIDlet implements ActionListener {
 
   private void display(String url) {
     String json_string = Utilities.urlopen(url);
-    String type = Utilities.get_text(json_string, "\"type\": \"", "\"");
+    String type = Utilities.get_text(json_string, TYPE_STARTS_WITH,
+                                                  DEFAULT_ENDS_WITH);
     
     if (type.equals(LIST)) {
       list_display(json_string);
@@ -111,13 +129,12 @@ public class Controller extends MIDlet implements ActionListener {
   public void startApp() {
       Display.init(this);
       try {
-        Resources r = Resources.open("/com/vinhcom/livefootball/default.res");
-        UIManager.getInstance().setThemeProps(r.getTheme("default"));
+        Resources r = Resources.open(theme_path);
+        UIManager.getInstance().setThemeProps(r.getTheme(theme));
       } catch (IOException ioe) {
         System.out.println("Couldn't load theme.");
       }
-      String url = root_url + "/menu";
-      display(url);
+      display(root_url);
   }
 
   public void pauseApp() {
