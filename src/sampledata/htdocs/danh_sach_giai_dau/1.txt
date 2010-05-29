@@ -1,9 +1,0 @@
-﻿{
-	"version": "0.9.1",
-	"type": "info",
-	"left_button": "",
-	"right_button": "back",
-	"auto_refresh": "60000",
-	"form_title": "South Africa - Mexico",
-	"info": "France (N) - Uruguay (11/06/2010)\n11/06/2010 14:30\n\nFrance (N)     : +0.5  @2.02\nUruguay        : -0.5  @1.91\n+2                    @1\n-2                    @1.95"
-}
