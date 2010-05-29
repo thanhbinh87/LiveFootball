@@ -5,8 +5,10 @@ import java.io.InputStreamReader;
 import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
+import javax.wireless.messaging.MessageConnection;
 
 public class Utilities {
+
   public static String replace(String text, String searchString, String replacementString) {
     StringBuffer sBuffer = new StringBuffer();
     int pos = 0;
@@ -99,4 +101,21 @@ public class Utilities {
       }
     }
   }//end urlopen(String)
+
+  public static String get_parent(String url) {
+    if ((url == null) || url.equals("") || url.equals("/")) {
+      return "";
+    }
+    if (url.endsWith("/index.html")) {
+      url = replace(url, "/index.html", "");
+    }
+    int lastSlashPos = url.lastIndexOf('/');
+
+    if (lastSlashPos >= 0) {
+      return url.substring(0, lastSlashPos); //strip off the slash
+    } else {
+      return ""; //we expect people to add  + "/somedir on their own
+    }
+  }
+
 }

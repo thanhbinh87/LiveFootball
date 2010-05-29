@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/lwuit/!svn/ver/943/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser
+END
+BrowserMIDlet.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/lwuit/!svn/ver/943/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser/BrowserMIDlet.java
+END
+Storage.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/lwuit/!svn/ver/907/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser/Storage.java
+END
+HttpRequestHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/lwuit/!svn/ver/943/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser/HttpRequestHandler.java
+END
+BrowserToolbar.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/lwuit/!svn/ver/907/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser/BrowserToolbar.java
+END
+BrowserForm.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/lwuit/!svn/ver/943/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser/BrowserForm.java
+END
+package.html
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/lwuit/!svn/ver/861/trunk/MIDP/Applications/LWUITBrowser/src/com/sun/lwuit/browser/package.html
+END
