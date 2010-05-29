@@ -1,0 +1,10 @@
+﻿{
+	"version": "0.9.1",
+	"type": "list",
+	"left_button": "select",
+	"right_button": "back",
+	"auto_refresh": "60000",
+	"form_title": "Danh sách trận đấu",
+	"items": [{"href": "danh_sach_giai_dau/1.txt", "name": "South Africa - Mexico"},
+			  {"href": "ty_le_truc_tuyen/ngoai_hang_anh", "name": "France (N) - Uruguay"}]
+}

@@ -1,0 +1,13 @@
+﻿{
+	"version": "0.9.1",
+	"type": "list",
+	"left_button": "select",
+	"right_button": "back",
+	"auto_refresh": "60000",
+	"form_title": "Chọn giải đấu",
+	"items": [{"href": "danh_sach_giai_dau/danh_sach_tran_dau.txt", "name": "Worldcup"},
+			  {"href": "ty_le_truc_tuyen/ngoai_hang_anh", "name": "Ngoại hạng Anh"},
+			  {"href": "ty_le_truc_tuyen/y", "name": "Ý"},
+			  {"href": "ty_le_truc_tuyen/tay_ban_nha", "name": "Tây Ban Nha"},
+			  {"href": "ty_le_truc_tuyen/khac", "name": "Khác"}]
+}
