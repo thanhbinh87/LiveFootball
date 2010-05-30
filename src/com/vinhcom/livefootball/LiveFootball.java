@@ -1,11 +1,16 @@
 package com.vinhcom.livefootball;
 
 import com.sun.lwuit.Command;
+import com.sun.lwuit.Component;
+import com.sun.lwuit.Container;
 import com.sun.lwuit.Dialog;
 import com.sun.lwuit.Display;
 import com.sun.lwuit.Form;
+import com.sun.lwuit.Graphics;
+import com.sun.lwuit.Label;
 import com.sun.lwuit.List;
 import com.sun.lwuit.TextArea;
+import com.sun.lwuit.TextField;
 import com.sun.lwuit.html.DocumentRequestHandler;
 import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.layouts.BorderLayout;
@@ -13,6 +18,7 @@ import com.sun.lwuit.browser.HttpRequestHandler;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
 import com.sun.lwuit.layouts.BoxLayout;
+import com.sun.lwuit.plaf.Style;
 import com.sun.lwuit.plaf.UIManager;
 import com.sun.lwuit.util.Resources;
 import java.io.IOException;
@@ -35,16 +41,83 @@ public class LiveFootball extends MIDlet implements ActionListener {
   private Command select_command = new Command("Chọn");
   private Command exit_command = new Command("Thoát");
 
-  /*
-   *
+  /**
    * Display Elements: List, Info, HTML.
-   *
    */
   private void list_display(String json_string) {
     String form_title = Utilities.get_text(json_string, Settings.FORM_TITLE_STARTS_WITH,
                                            Settings.DEFAULT_ENDS_WITH);
     form = new Form(form_title);  // tạo form với tên form lấy được trong chuỗi trả về
-    list = new List();
+    list = new List() {
+
+      /**
+       * Tìm kiếm đơn giản (gõ chữ cái đầu sẽ nhảy đến vị trí thỏa mãn
+       */
+      private long lastSearchInteraction;
+      private TextField search = new TextField(3);
+
+      {
+        search.getSelectedStyle().setBgTransparency(255);
+        search.setReplaceMenu(false);
+        search.setInputModeOrder(new String[]{"Abc"});
+        search.setFocus(true);
+      }
+
+      public void keyPressed(int code) {
+        int game = Display.getInstance().getGameAction(code);
+        if (game > 0) {
+          super.keyPressed(code);
+        }
+        else {
+          search.keyPressed(code);
+          lastSearchInteraction = System.currentTimeMillis();
+        }
+      }
+
+      public void keyReleased(int code) {
+        int game = Display.getInstance().getGameAction(code);
+        if (game > 0) {
+          super.keyReleased(code);
+        }
+        else {
+          search.keyReleased(code);
+          lastSearchInteraction = System.currentTimeMillis();
+          String t = search.getText();
+          int modelSize = getModel().getSize();
+          for (int iter = 0; iter < modelSize; iter++) {
+            String v = getModel().getItemAt(iter).toString();
+            if (v.startsWith(t)) {
+              setSelectedIndex(iter);
+              return;
+            }
+          }
+        }
+      }
+
+      public void paint(Graphics g) {
+        super.paint(g);
+        if (System.currentTimeMillis() - 300 < lastSearchInteraction || search.isPendingCommit()) {
+          search.setSize(search.getPreferredSize());
+          Style s = search.getStyle();
+          search.setX(getX() + getWidth() - search.getWidth() - s.getPadding(RIGHT) - s.getMargin(RIGHT));
+          search.setY(getScrollY() + getY());
+          search.paintComponent(g, true);
+        }
+      }
+
+      public boolean animate() {
+        boolean val = super.animate();
+        if (lastSearchInteraction != -1) {
+          search.animate();
+          if (System.currentTimeMillis() - 300 > lastSearchInteraction && !search.isPendingCommit()) {
+            lastSearchInteraction = -1;
+            search.clear();
+          }
+          return true;
+        }
+        return val;
+      }
+    };
     href_list = new Vector();
     form.setLayout(new BorderLayout());
     String items_string = Utilities.get_text(json_string, Settings.ITEMS_STARTS_WITH,
@@ -59,6 +132,9 @@ public class LiveFootball extends MIDlet implements ActionListener {
                                                                  Settings.DEFAULT_ENDS_WITH);
       href_list.addElement(href);
     }
+
+
+
     form.addComponent(BorderLayout.CENTER, list);
     form.show();
 
@@ -108,12 +184,31 @@ public class LiveFootball extends MIDlet implements ActionListener {
     Dialog.show(Title, Message, "Đồng ý", "Hủy");
   }
 
-  /*
+  private Form loading(String message) {
+    form = new Form();
+
+    Container cont = new Container();
+    cont.setLayout(new BoxLayout(BoxLayout.Y_AXIS));
+
+    Label label = new Label(message);
+    label.getStyle().setMargin(Component.TOP, Display.getInstance().getDisplayHeight() / 3);
+    label.getStyle().setMargin(Component.LEFT, Display.getInstance().getDisplayWidth() / 3);
+    label.setAlignment(Component.CENTER);
+
+    cont.addComponent(label);
+
+    form.addComponent(cont);
+
+    return form;
+  }
+
+  /**
    * Timer Refresh Task
    */
   private class RefreshTimerTask extends TimerTask {
 
     public final void run() {
+      System.out.println("Reload with: " + url);
       display(url);
     }
   }
@@ -124,6 +219,7 @@ public class LiveFootball extends MIDlet implements ActionListener {
     }
 
     if (ae.getCommand() == exit_command) {
+      destroyApp(true);
       notifyDestroyed();
     }
     else if (ae.getCommand() == back_command) {
@@ -140,7 +236,7 @@ public class LiveFootball extends MIDlet implements ActionListener {
     }
   }
 
-  /*
+  /**
    * Display Bottom Commands by server config
    */
   private void command_handler(String json_string) {
@@ -168,11 +264,11 @@ public class LiveFootball extends MIDlet implements ActionListener {
       form.addCommand(back_command);
     }
     form.setCommandListener(this); // Chờ đến khi có một nút được bấm
-  }
+    }
 
-  private void display(String url) {
+  private void display(final String url) {
     try {
-      String json_string = Utilities.urlopen(url);
+      final String json_string = Utilities.urlopen(url);
       String type = Utilities.get_text(json_string, Settings.TYPE_STARTS_WITH,
                                        Settings.DEFAULT_ENDS_WITH);
 
@@ -183,16 +279,41 @@ public class LiveFootball extends MIDlet implements ActionListener {
         info_display(json_string);
       }
       else if (type.equals(Settings.HTML)) {
-        html_display(json_string);
+        loading("Đang tải dữ liệu...").show();
+        new Thread() {
+
+          public void run() {
+            html_display(json_string);
+
+            command_handler(json_string);
+            auto_refresh = Utilities.get_text(json_string, Settings.AUTO_REFRESH_STARTS_WITH,
+                                              Settings.DEFAULT_ENDS_WITH);
+            if (auto_refresh != null) {
+              if (timer != null) { // dừng tự động refresh (nếu có)
+                timer.cancel();
+              }
+              timer = new Timer();
+              reload = new RefreshTimerTask();
+              timer.schedule(reload, Integer.parseInt(auto_refresh));
+            }
+
+            last_request = url;
+          }
+        }.start();
+
       }
+
       command_handler(json_string);
-      /*
+      /**
        * nếu tham số auto_refresh được thiết lập thì tự động refresh mỗi xxx ms
        * định sẵn
        */
       auto_refresh = Utilities.get_text(json_string, Settings.AUTO_REFRESH_STARTS_WITH,
                                         Settings.DEFAULT_ENDS_WITH);
       if (auto_refresh != null) {
+        if (timer != null) { // dừng tự động refresh (nếu có)
+          timer.cancel();
+        }
         timer = new Timer();
         reload = new RefreshTimerTask();
         timer.schedule(reload, Integer.parseInt(auto_refresh));
@@ -230,8 +351,8 @@ public class LiveFootball extends MIDlet implements ActionListener {
       UIManager.getInstance().setThemeProps(r.getTheme(Settings.THEME));
     }
     catch (IOException ioe) {
-//      System.out.println("Couldn't load theme.");
     }
+
     display(Settings.ROOT_URL);
   }
 
@@ -239,5 +360,12 @@ public class LiveFootball extends MIDlet implements ActionListener {
   }
 
   public void destroyApp(boolean unconditional) {
+    url = null;
+    last_request = null;
+    auto_refresh = null;
+    list = null;
+    timer = null;
+    reload = null;
+
   }
 }
