@@ -3,7 +3,6 @@ package com.vinhcom.livefootball;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.wireless.messaging.MessageConnection;
@@ -20,48 +19,6 @@ public class Utilities {
     }
     sBuffer.append(text);
     return sBuffer.toString();
-  }
-
-  public static String get_text(String str, String tag) {
-    return get_text(str, tag, tag);
-  }
-
-  public static String get_text(String str, String open, String close) {
-    if (str == null || open == null || close == null) {
-      return null;
-    }
-    int start = str.indexOf(open);
-    if (start != -1) {
-      int end = str.indexOf(close, start + open.length());
-      if (end != -1) {
-        return str.substring(start + open.length(), end);
-      }
-    }
-    return null;
-  }
-
-  public static boolean is_empty(String str) {
-    return str == null || str.length() == 0;
-  }
-
-  public static String[] split(String original, String sep) {
-    Vector nodes = new Vector();
-    String separator = sep;
-    int index = original.indexOf(separator);
-    while (index >= 0) {
-      nodes.addElement(original.substring(0, index));
-      original = original.substring(index + separator.length());
-      index = original.indexOf(separator);
-    }
-    nodes.addElement(original);
-
-    String[] result = new String[nodes.size()];
-    if (nodes.size() > 0) {
-      for (int loop = 0; loop < nodes.size(); loop++) {
-        result[loop] = (String) nodes.elementAt(loop);
-      }
-    }
-    return result;
   }
 
   public static String urlopen(String url) {
@@ -112,8 +69,8 @@ public class Utilities {
     if ((url == null) || url.equals("") || url.equals("/")) {
       return "";
     }
-    if (url.endsWith("/index.html")) {
-      url = replace(url, "/index.html", "");
+    if (url.endsWith("/index.txt")) {
+      url = replace(url, "/index.txt", "");
     }
     int lastSlashPos = url.lastIndexOf('/');
 
