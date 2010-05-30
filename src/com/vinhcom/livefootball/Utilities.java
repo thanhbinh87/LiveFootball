@@ -1,11 +1,13 @@
 package com.vinhcom.livefootball;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.wireless.messaging.MessageConnection;
+import javax.wireless.messaging.TextMessage;
 
 public class Utilities {
 
@@ -84,12 +86,15 @@ public class Utilities {
           sb.append((char) read);
         }
         return sb.toString();
-      } else {
+      }
+      else {
         throw new Exception("Gặp lỗi trong quá trình kết nối");
       }
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
       return null;
-    } finally {
+    }
+    finally {
       try {
         if (str != null) {
           str.close();
@@ -97,7 +102,8 @@ public class Utilities {
         if (cn != null) {
           cn.close();
         }
-      } catch (Exception e) {
+      }
+      catch (Exception e) {
       }
     }
   }//end urlopen(String)
@@ -113,9 +119,66 @@ public class Utilities {
 
     if (lastSlashPos >= 0) {
       return url.substring(0, lastSlashPos); //strip off the slash
-    } else {
+    }
+    else {
       return ""; //we expect people to add  + "/somedir on their own
     }
   }
 
+  /** Sends an SMS message */
+  public class SMSender implements Runnable {
+
+    private String smsReceiverPort;
+    private String message;
+    private String phoneNumber;
+
+    public SMSender(String smsReceiverPort) {
+      this.smsReceiverPort = smsReceiverPort;
+    }
+
+    public void run() {
+      StringBuffer addr = new StringBuffer(20);
+      addr.append("sms://+");
+      if (phoneNumber.length() == 11) {
+        addr.append("86");//  china
+      }
+      addr.append(phoneNumber);
+      // String address = "sms://+8613641301055";
+      String address = addr.toString();
+
+      MessageConnection smsconn = null;
+      try {
+        // Open the message connection.
+        smsconn = (MessageConnection) Connector.open(address);
+        // Create the message.
+        TextMessage txtmessage = (TextMessage) smsconn.newMessage(MessageConnection.TEXT_MESSAGE);
+        txtmessage.setAddress(address);// !!
+        txtmessage.setPayloadText(message);
+        smsconn.send(txtmessage);
+      }
+      catch (Exception e) {
+        e.printStackTrace();
+      }
+
+      if (smsconn != null) {
+        try {
+          smsconn.close();
+        }
+        catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+    }
+
+    public void send(String message, String phoneNumber) {
+      this.message = message;
+      this.phoneNumber = phoneNumber;
+      Thread t = new Thread(this);
+      t.start();
+    }
+  }
 }
+
+
+
+
