@@ -11,6 +11,7 @@ import com.sun.lwuit.Label;
 import com.sun.lwuit.List;
 import com.sun.lwuit.TextArea;
 import com.sun.lwuit.TextField;
+import com.sun.lwuit.animations.Transition3D;
 import com.sun.lwuit.html.DocumentRequestHandler;
 import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.layouts.BorderLayout;
@@ -42,16 +43,19 @@ public class LiveFootball extends MIDlet implements ActionListener {
   private Command exit_command = new Command("Thoát");
 
   /**
-   * Display Elements: List, Info, HTML.
+   * Display Elements: List, Info, HTML, Richtext.
    */
   private void list_display(String json_string) {
     String form_title = Utilities.get_text(json_string, Settings.FORM_TITLE_STARTS_WITH,
                                            Settings.DEFAULT_ENDS_WITH);
     form = new Form(form_title);  // tạo form với tên form lấy được trong chuỗi trả về
-    list = new List() {
+    
+    form.setTransitionInAnimator(Transition3D.createRotation(500, true)); // .createCube(1000, true));
+//    form.setTransitionOutAnimator(Translation)
 
+    list = new List() {
       /**
-       * Tìm kiếm đơn giản (gõ chữ cái đầu sẽ nhảy đến vị trí thỏa mãn
+       * Tìm kiếm đơn giản (gõ chữ cái đầu sẽ nhảy đến vị trí thỏa mãn)
        */
       private long lastSearchInteraction;
       private TextField search = new TextField(3);
@@ -162,6 +166,15 @@ public class LiveFootball extends MIDlet implements ActionListener {
   }
 
   private void html_display(String json_string) {
+    // get link from json_string
+    // display html page with html component
+  }
+
+  private void image_display(String json_string) {
+    
+  }
+
+  private void richtext_display(String json_string) {
     String form_title = Utilities.get_text(json_string, Settings.FORM_TITLE_STARTS_WITH,
                                            Settings.DEFAULT_ENDS_WITH);
     form = new Form(form_title);
@@ -208,7 +221,7 @@ public class LiveFootball extends MIDlet implements ActionListener {
   private class RefreshTimerTask extends TimerTask {
 
     public final void run() {
-      System.out.println("Reload with: " + url);
+//      System.out.println("Reload with: " + url);
       display(url);
     }
   }
@@ -278,12 +291,12 @@ public class LiveFootball extends MIDlet implements ActionListener {
       else if (type.equals(Settings.INFO)) {
         info_display(json_string);
       }
-      else if (type.equals(Settings.HTML)) {
+      else if (type.equals(Settings.RICHTEXT)) {
         loading("Đang tải dữ liệu...").show();
         new Thread() {
 
           public void run() {
-            html_display(json_string);
+            richtext_display(json_string);
 
             command_handler(json_string);
             auto_refresh = Utilities.get_text(json_string, Settings.AUTO_REFRESH_STARTS_WITH,
@@ -360,6 +373,9 @@ public class LiveFootball extends MIDlet implements ActionListener {
   }
 
   public void destroyApp(boolean unconditional) {
+    if (timer != null) { // dừng tự động refresh (nếu có)
+      timer.cancel();
+    }
     url = null;
     last_request = null;
     auto_refresh = null;

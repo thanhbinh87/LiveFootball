@@ -8,6 +8,7 @@ public class Settings {
   public static final String LIST = "list";
   public static final String INFO = "info";
   public static final String HTML = "html";
+  public static final String RICHTEXT = "richtext";
   public static final String TYPE_STARTS_WITH = "\"type\": \"";
   public static final String HREF_STARTS_WITH = "\"href\": \"";
   public static final String NAME_STARTS_WITH = "\"name\": \"";
