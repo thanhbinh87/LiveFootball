@@ -1,6 +1,5 @@
 /**
  * TODO:
- * - Khi có nút RELOAD, nhấn liên tục nút này thì thứ tự menu trái/phả bị đảo lộn
  * - Add Splash Screen
  * - Display Image in richtext/html
  * - Add icon to list
@@ -67,6 +66,9 @@ public class Controller
       String right_button_type = right_button.getString(Settings.BUTTON_TYPE);
       String right_button_name = right_button.getString(Settings.BUTTON_NAME);
 
+//      System.out.println("Left Button: " + left_button_type);
+//      System.out.println("Right Button: " + right_button_type);
+
       /**
        * Left Command
        */
@@ -131,12 +133,12 @@ public class Controller
       String content;
       content = (String) Views.cache.get(url);
       if (content != null) {
-        System.out.println(
-                "Found cache for " + url);
+//        System.out.println(
+//                "Found cache for " + url);
       }
       if (content == null) {
         content = Models.urlopen(url);
-        System.out.println("Getting new data from server for url: " + url);
+//        System.out.println("Getting new data from server for url: " + url);
       }
 
       Views.json = new JSONObject(content);
@@ -155,44 +157,48 @@ public class Controller
        */
       if (type.equals(Settings.LIST)) {
         Views.list_display();
+        /**
+         * Parse and Display Bottom Commands
+         */
+        display_bottom_commands();
       }
       else if (type.equals(Settings.INFO)) {
         Views.info_display();
+        /**
+         * Parse and Display Bottom Commands
+         */
+        display_bottom_commands();
       }
       else if (type.equals(Settings.HTML)) {
         Views.html_display();
+        /**
+         * Parse and Display Bottom Commands
+         */
+        display_bottom_commands();
       }
       else if (type.equals(Settings.RICHTEXT)) {
         Views.loading("Đang tải dữ liệu...").show();
         new Thread() {
 
           public void run() {
-            try {
-              Views.richtext_display();
-              display_bottom_commands();
-              auto_refresh = Views.json.getString(Settings.AUTO_REFRESH);
-              if (auto_refresh.equals("0") || (auto_refresh == null)) {
-              }
-              else {
-                if (timer != null) {
-                  timer.cancel(); // dừng tự động refresh (nếu có)
-                }
-                timer = new Timer();
-                reload = new RefreshTimerTask();
-                timer.schedule(reload, Integer.parseInt(auto_refresh));
-              }
-            }
-            catch (JSONException ex) {
-              ex.printStackTrace();
-            }
+            Views.richtext_display();
+            display_bottom_commands();
+//              auto_refresh = Views.json.getString(Settings.AUTO_REFRESH);
+//              if (auto_refresh.equals("0") || (auto_refresh == null)) {
+//              }
+//              else {
+//                if (timer != null) {
+//                  timer.cancel(); // dừng tự động refresh (nếu có)
+//                }
+//                timer = new Timer();
+//                reload = new RefreshTimerTask();
+//                timer.schedule(reload, Integer.parseInt(auto_refresh));
+//              }
+
           }
         }.start();
 
       }
-      /**
-       * Parse and Display Bottom Commands
-       */
-      display_bottom_commands();
 
       /**
        * nếu tham số auto_refresh được thiết lập thì tự động refresh mỗi xxx ms
@@ -215,6 +221,8 @@ public class Controller
                   "Cấu hình phía server bị lỗi. " +
                   "Bạn không thể truy cập vào mục này" +
                   "cho đến khi việc sửa đổi ở phía server hoàn tất.");
+      destroyApp(true);
+      notifyDestroyed();
     }
   }
 
