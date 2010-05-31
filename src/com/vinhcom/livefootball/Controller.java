@@ -1,13 +1,11 @@
 /**
  * TODO:
- * - Khi có nút RELOAD, nhấn liên tục nút này thì thứ tự menu trái/phải
- * bị đảo lộn
+ * - Khi có nút RELOAD, nhấn liên tục nút này thì thứ tự menu trái/phả bị đảo lộn
+ * - Nhấn vào Odd Info rồi back lại, để như vậy khoảng 1 phút thì tự động chuyển lại OddInfo
  * - Add Splash Screen
  * - Display Image in richtext/html
  * - Add icon to list
  */
-
-
 package com.vinhcom.livefootball;
 
 import javax.microedition.midlet.MIDlet;
@@ -24,7 +22,7 @@ import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
 
-public class LiveFootball
+public class Controller
         extends MIDlet
         implements ActionListener {
 
@@ -127,7 +125,7 @@ public class LiveFootball
 
   private void display(final String url) {
     try {
-      /** 
+      /**
        * NOTE: Data from server must is UTF-8 without BOM
        * Get Data From Cache. If not exist, get it from Server.
        */
@@ -138,10 +136,10 @@ public class LiveFootball
                 "Found cache for " + url);
       }
       if (content == null) {
-        content = Utilities.urlopen(url);
+        content = Models.urlopen(url);
         System.out.println("Getting new data from server for url: " + url);
       }
-      
+
       Views.json = new JSONObject(content);
       String cache_status = Views.json.getString("cache");
       if (cache_status.equals("yes")) {
@@ -215,9 +213,9 @@ public class LiveFootball
     }
     catch (Exception e) {
       Views.alert("Lỗi",
-            "Cấu hình phía server bị lỗi. " +
-            "Bạn không thể truy cập vào mục này" +
-            "cho đến khi việc sửa đổi ở phía server hoàn tất.");
+                  "Cấu hình phía server bị lỗi. " +
+                  "Bạn không thể truy cập vào mục này" +
+                  "cho đến khi việc sửa đổi ở phía server hoàn tất.");
     }
   }
 
@@ -226,9 +224,10 @@ public class LiveFootball
       if (timer != null) { // dừng tự động refresh (nếu có)
         timer.cancel();
       }
-      Views.alert("Tạm biệt", "Cảm ơn bạn đã sử dụng phần mềm :).\n" +
-              "Nếu có bất cứ thắc mắc gì, đừng ngần ngại liên hệ lại" +
-              "với chúng tôi. Rất mong được gặp lại bạn!");
+      Views.alert("Tạm biệt",
+                  "Cảm ơn bạn đã sử dụng phần mềm :).\n" +
+                  "Nếu có bất cứ thắc mắc gì, đừng ngần ngại liên hệ lại" +
+                  "với chúng tôi. Rất mong được gặp lại bạn!");
       destroyApp(true);
       notifyDestroyed();
     }
@@ -265,8 +264,8 @@ public class LiveFootball
 
   public void startApp() {
 //    try { // kiểm tra phiên bản mới
-//      String jad_content = Utilities.urlopen(update_path);
-//      String version = Utilities.get_text(jad_content, "MIDlet-Version: ", "\n");
+//      String jad_content = Models.urlopen(update_path);
+//      String version = Models.get_text(jad_content, "MIDlet-Version: ", "\n");
 //      System.out.println(version);
 //      System.out.println(VERSION);
 //      if (version.trim().equals(VERSION.trim())) {

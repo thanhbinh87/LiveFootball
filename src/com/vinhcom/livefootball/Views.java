@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.vinhcom.livefootball;
 
 import com.sun.lwuit.Component;
@@ -28,6 +27,7 @@ import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
+
 /**
  *
  * @author win7_64
@@ -39,7 +39,8 @@ public class Views {
   public static List list;
   public static JSONObject json;
   public static Hashtable cache = new Hashtable();
-/**
+
+  /**
    * Display Elements: List, Info, HTML, Richtext.
    */
   public static void list_display() {
@@ -47,7 +48,11 @@ public class Views {
       String form_title = json.getString(Settings.FORM_TITLE);
 //      System.out.println("Form title: " + form_title);
       form = new Form(form_title); // tạo form với tên form lấy được trong chuỗi trả về
-      form.setTransitionInAnimator(Transition3D.createRotation(500, true)); // .createCube(1000, true));
+      form.setTransitionInAnimator(Transition3D.createRotation(600, true));
+//      form.setTransitionInAnimator(Transition3D.createCube(300, false));
+
+      form.setLayout(new BorderLayout());
+      href_list = new Vector();
       list = new List() {
 
         /**
@@ -121,8 +126,8 @@ public class Views {
           return val;
         }
       };
-      href_list = new Vector();
-      form.setLayout(new BorderLayout());
+
+
       JSONArray items = json.getJSONArray(Settings.ITEMS);
       for (int i = 0; i < items.length(); i++) {
         JSONObject item = items.getJSONObject(i);
@@ -132,6 +137,7 @@ public class Views {
                 Settings.ITEM_HREF);
         href_list.addElement(href);
       }
+
       form.addComponent(BorderLayout.CENTER, list);
       form.show();
     }
@@ -148,7 +154,7 @@ public class Views {
       form.setScrollable(true);
       form.setLayout(new BorderLayout());
       String info = json.getString(Settings.INFO);
-      info = Utilities.replace(info, Settings.INFO_SEPERATE_CHARACTER, "\n");
+      info = Models.replace(info, Settings.INFO_SEPERATE_CHARACTER, "\n");
       TextArea aboutText = new TextArea(info, 5, 10); //show info
       aboutText.setEditable(false);
       form.addComponent(BorderLayout.CENTER, aboutText);
@@ -220,8 +226,4 @@ public class Views {
 
     return form;
   }
-
-
-
-
 }
