@@ -1,7 +1,6 @@
 /**
  * TODO:
  * - Khi có nút RELOAD, nhấn liên tục nút này thì thứ tự menu trái/phả bị đảo lộn
- * - Nhấn vào Odd Info rồi back lại, để như vậy khoảng 1 phút thì tự động chuyển lại OddInfo
  * - Add Splash Screen
  * - Display Image in richtext/html
  * - Add icon to list
@@ -236,10 +235,12 @@ public class Controller
         timer.cancel();
       }
       if (button_url.equals("/")) {
-        display(Settings.ROOT_URL);
+        url = Settings.ROOT_URL;
+        display(url);
       }
       else {
-        display(Settings.ROOT_URL + "/" + button_url);
+        url = Settings.ROOT_URL + "/" + button_url;
+        display(url);
       }
     }
     else if (ae.getCommand() == select_command) { // nếu bấm nút "Chọn"
