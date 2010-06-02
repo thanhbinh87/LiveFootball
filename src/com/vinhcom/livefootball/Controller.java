@@ -3,19 +3,36 @@
  * - Add Splash Screen
  * - Display Image in richtext/html
  * - Add icon to list
+ * - Ấn Back quay lại list trỏ focus về mục vừa bấm (!= đầu tiên)
  */
 package com.vinhcom.livefootball;
 
 import javax.microedition.midlet.MIDlet;
 import com.sun.lwuit.Command;
+import com.sun.lwuit.Component;
+import com.sun.lwuit.Container;
+import com.sun.lwuit.Dialog;
 import com.sun.lwuit.Display;
+import com.sun.lwuit.Form;
+import com.sun.lwuit.Label;
+import com.sun.lwuit.List;
+import com.sun.lwuit.animations.Transition3D;
+import com.sun.lwuit.browser.HttpRequestHandler;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
+import com.sun.lwuit.html.DocumentRequestHandler;
+import com.sun.lwuit.html.HTMLComponent;
+import com.sun.lwuit.layouts.BorderLayout;
+import com.sun.lwuit.layouts.BoxLayout;
+import com.sun.lwuit.list.ListCellRenderer;
 import com.sun.lwuit.plaf.UIManager;
 import com.sun.lwuit.util.Resources;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Vector;
+import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
@@ -27,7 +44,9 @@ public class Controller
   /**
    * Global Paramenters
    */
+  private int status;
   private String url;
+  private String recent_url;
   private String auto_refresh;
   private String button_url;
   private Timer timer;
@@ -36,6 +55,139 @@ public class Controller
   private Command select_command;
   private Command exit_command;
   private Command reload_command;
+  private Thread thread;
+  private Vector href_list;
+  private Form form;
+  private List list;
+  private JSONObject json;
+  private Hashtable cache = new Hashtable();
+  
+
+  /**
+   * Display Elements:
+   * - List
+   * - Two-lines List
+   * - Richtext: Support HTML Format
+   * - HTML: Display a WAP page
+   * - Alert: Display Popup Notifications
+   * - Loading: Display Loading Screen
+   */
+  public void list_display() {
+    try {
+      String form_title = json.getString(Settings.FORM_TITLE);
+     // font.drawString(form_title, status, status, status, null);
+      form = new Form(form_title) {
+
+        public void keyPressed(int key_code) {
+          System.out.println("Pressed keycode: " + key_code);
+
+          if (key_code == -5) { // Thực hiện hành động SELECT
+            if (timer != null) { // dừng tự động refresh (nếu có)
+              timer.cancel();
+            }
+            /* lấy id của đối tượng được chọn (id bắt đầu từ 0) */
+            int index = list.getSelectedIndex();
+
+            /* lấy url tương ứng với đối tượng được chọn */
+            url = (String) href_list.elementAt(index);
+            progress_controller(url);
+          }
+          else {
+            super.keyPressed(key_code);
+          }
+        }
+      };
+
+      form.setTransitionInAnimator(Transition3D.createCube(300, true));
+      form.setLayout(new BorderLayout());
+      href_list = new Vector();
+      list = new List();
+     
+      JSONArray items = json.getJSONArray(Settings.ITEMS);
+      for (int i = 0; i < items.length(); i++) {
+        JSONObject item = items.getJSONObject(i);
+        String item_name = item.getString(Settings.ITEM_NAME);
+        list.addItem(item_name);
+        String href = Settings.ROOT_URL + "/" + item.getString(
+                Settings.ITEM_HREF);
+        href_list.addElement(href);
+      }
+
+      form.addComponent(BorderLayout.CENTER, list);
+      form.show();
+    }
+    catch (JSONException ex) {
+      ex.printStackTrace();
+    }
+
+  }
+
+  private void richtext_display() {
+    try {
+      String form_title = json.getString(Settings.FORM_TITLE);
+      form = new Form(form_title);
+      form.setLayout(new BoxLayout(BoxLayout.Y_AXIS));
+      DocumentRequestHandler handler;
+      handler = new HttpRequestHandler();
+      HTMLComponent html = new HTMLComponent(handler);
+      html.setBodyText(json.getString(Settings.INFO));
+      form.addComponent(html);
+      form.show();
+    }
+    catch (JSONException ex) {
+      ex.printStackTrace();
+    }
+  }
+
+
+
+  private void two_line_list_display() {
+//    list = new List();
+//    list.a
+  }
+
+  private void html_display() {
+    try {
+      String form_title = json.getString(Settings.FORM_TITLE);
+      System.out.println(form_title);
+      form = new Form(form_title);
+      form.setLayout(new BoxLayout(BoxLayout.Y_AXIS));
+      DocumentRequestHandler handler;
+      handler = new HttpRequestHandler();
+      HTMLComponent html = new HTMLComponent(handler);
+      html.setPage(json.getString(Settings.CONTENT_URL));
+      System.out.println(json.getString(Settings.CONTENT_URL));
+      form.addComponent(html);
+      form.show();
+    }
+    catch (JSONException ex) {
+      ex.printStackTrace();
+    }
+  }
+
+  public static void image_display() {
+  }
+
+  private void alert(String Title, String Message) {
+    Dialog.show(Title, Message, "Đóng", null);
+  }
+
+  private void loading(String message) {
+    form = new Form();
+    Container cont = new Container();
+    cont.setLayout(new BoxLayout(BoxLayout.Y_AXIS));
+
+    Label label = new Label(message);
+    label.getStyle().setMargin(Component.TOP, Display.getInstance().
+            getDisplayHeight() / 3);
+    label.getStyle().setMargin(Component.LEFT, Display.getInstance().
+            getDisplayWidth() / 3);
+    label.setAlignment(Component.CENTER);
+
+    cont.addComponent(label);
+    form.addComponent(cont);
+    form.show();
+  }
 
 
   /**
@@ -58,11 +210,11 @@ public class Controller
       /**
        * Button Properties
        */
-      JSONObject left_button = Views.json.getJSONObject(Settings.LEFT_BUTTON);
+      JSONObject left_button = json.getJSONObject(Settings.LEFT_BUTTON);
       String left_button_type = left_button.getString(Settings.BUTTON_TYPE);
       String left_button_name = left_button.getString(Settings.BUTTON_NAME);
 
-      JSONObject right_button = Views.json.getJSONObject(Settings.RIGHT_BUTTON);
+      JSONObject right_button = json.getJSONObject(Settings.RIGHT_BUTTON);
       String right_button_type = right_button.getString(Settings.BUTTON_TYPE);
       String right_button_name = right_button.getString(Settings.BUTTON_NAME);
 
@@ -74,19 +226,19 @@ public class Controller
        */
       if (left_button_type.equals(Settings.SELECT)) {
         select_command = new Command(left_button_name);
-        Views.form.addCommand(select_command);
+        form.addCommand(select_command);
       }
       else if (left_button_type.equals(Settings.EXIT)) {
         exit_command = new Command(left_button_name);
-        Views.form.addCommand(exit_command);
+        form.addCommand(exit_command);
       }
       else if (left_button_type.equals(Settings.RELOAD)) {
         reload_command = new Command(left_button_name);
-        Views.form.addCommand(reload_command);
+        form.addCommand(reload_command);
       }
       else if (left_button_type.equals(Settings.HYPERLINK)) {
         hyperlink_command = new Command(left_button_name);
-        Views.form.addCommand(hyperlink_command);
+        form.addCommand(hyperlink_command);
         button_url = left_button.getString(Settings.BUTTON_URL);
       }
 
@@ -95,26 +247,26 @@ public class Controller
        */
       if (right_button_type.equals(Settings.SELECT)) {
         select_command = new Command(right_button_name);
-        Views.form.addCommand(select_command);
+        form.addCommand(select_command);
       }
       else if (right_button_type.equals(Settings.EXIT)) {
         exit_command = new Command(right_button_name);
-        Views.form.addCommand(exit_command);
+        form.addCommand(exit_command);
       }
       else if (right_button_type.equals(Settings.RELOAD)) {
         reload_command = new Command(right_button_name);
-        Views.form.addCommand(reload_command);
+        form.addCommand(reload_command);
       }
       else if (right_button_type.equals(Settings.HYPERLINK)) {
         hyperlink_command = new Command(right_button_name);
-        Views.form.addCommand(hyperlink_command);
+        form.addCommand(hyperlink_command);
         button_url = right_button.getString(Settings.BUTTON_URL);
       }
 
       /**
        * Command Listener
        */
-      Views.form.setCommandListener(this); // Chờ đến khi có một nút được bấm
+      form.setCommandListener(this); // Chờ đến khi có một nút được bấm
     }
     catch (JSONException ex) {
       /**
@@ -131,7 +283,8 @@ public class Controller
        * Get Data From Cache. If not exist, get it from Server.
        */
       String content;
-      content = (String) Views.cache.get(url);
+      content = (String) cache.get(url);
+      System.out.println(content);
       if (content != null) {
 //        System.out.println(
 //                "Found cache for " + url);
@@ -140,71 +293,46 @@ public class Controller
         content = Models.urlopen(url);
 //        System.out.println("Getting new data from server for url: " + url);
       }
+      json = new JSONObject(content);
 
-      Views.json = new JSONObject(content);
-      String cache_status = Views.json.getString("cache");
+      String cache_status = null;
+      cache_status = json.getString("cache");
       if (cache_status.equals("yes")) {
-        Views.cache.put(url, content); //save to cache
+        cache.put(url, content); //save to cache
       }
 
       /**
        * Get Display Type
        */
-      String type = Views.json.getString(Settings.TYPE);
+      String type = null;
+      type = json.getString(Settings.TYPE);
+      System.out.println(type);
 
       /**
        * Diplay Type Parser
        */
       if (type.equals(Settings.LIST)) {
-        Views.list_display();
-        /**
-         * Parse and Display Bottom Commands
-         */
+        list_display();
         display_bottom_commands();
       }
-      else if (type.equals(Settings.INFO)) {
-        Views.info_display();
-        /**
-         * Parse and Display Bottom Commands
-         */
-        display_bottom_commands();
-      }
+//      else if (type.equals(Settings.INFO)) {
+//        info_display();
+//        display_bottom_commands();
+//      }
       else if (type.equals(Settings.HTML)) {
-        Views.html_display();
-        /**
-         * Parse and Display Bottom Commands
-         */
+        html_display();
         display_bottom_commands();
       }
       else if (type.equals(Settings.RICHTEXT)) {
-        Views.loading("Đang tải dữ liệu...").show();
-        new Thread() {
-
-          public void run() {
-            Views.richtext_display();
-            display_bottom_commands();
-//              auto_refresh = Views.json.getString(Settings.AUTO_REFRESH);
-//              if (auto_refresh.equals("0") || (auto_refresh == null)) {
-//              }
-//              else {
-//                if (timer != null) {
-//                  timer.cancel(); // dừng tự động refresh (nếu có)
-//                }
-//                timer = new Timer();
-//                reload = new RefreshTimerTask();
-//                timer.schedule(reload, Integer.parseInt(auto_refresh));
-//              }
-
-          }
-        }.start();
+        richtext_display();
+        display_bottom_commands();
 
       }
-
       /**
        * nếu tham số auto_refresh được thiết lập thì tự động refresh mỗi xxx ms
        * định sẵn
        */
-      auto_refresh = Views.json.getString(Settings.AUTO_REFRESH);
+      auto_refresh = json.getString(Settings.AUTO_REFRESH);
       if (auto_refresh.equals("0") || (auto_refresh == null)) {
       }
       else {
@@ -215,14 +343,39 @@ public class Controller
         reload = new RefreshTimerTask();
         timer.schedule(reload, Integer.parseInt(auto_refresh));
       }
+
+      recent_url = url;
+
+      status = 1;
+
     }
     catch (Exception e) {
-      Views.alert("Lỗi",
-                  "Cấu hình phía server bị lỗi. " +
-                  "Bạn không thể truy cập vào mục này" +
-                  "cho đến khi việc sửa đổi ở phía server hoàn tất.");
-      destroyApp(true);
-      notifyDestroyed();
+      alert("Lỗi kết nối",
+            "Không thể khởi tạo kết nối đến server.");
+      System.out.println("Status Code: " + status);
+      if (status != 1) {  // status = 1 tương ứng với chương trình đang chạy
+        destroyApp(true);
+        notifyDestroyed();
+      }
+      else {
+        display(recent_url);
+      }
+    }
+  }
+
+  private void progress_controller(final String url) {
+    if (cache.get(url) == null) {
+      loading("Đang tải dữ liệu...");
+      thread = new Thread() {
+        public void run() {
+          display(url);
+        }
+      };
+      thread.start();
+
+    }
+    else {
+      display(url);
     }
   }
 
@@ -231,10 +384,10 @@ public class Controller
       if (timer != null) { // dừng tự động refresh (nếu có)
         timer.cancel();
       }
-      Views.alert("Tạm biệt",
-                  "Cảm ơn bạn đã sử dụng phần mềm :).\n" +
-                  "Nếu có bất cứ thắc mắc gì, đừng ngần ngại liên hệ lại" +
-                  "với chúng tôi. Rất mong được gặp lại bạn!");
+      alert("Tạm biệt",
+            "Cảm ơn bạn đã sử dụng phần mềm :). \n" +
+            "Nếu có bất cứ thắc mắc gì, đừng ngần ngại liên hệ lại " +
+            "với chúng tôi. Rất mong được gặp lại bạn!");
       destroyApp(true);
       notifyDestroyed();
     }
@@ -243,12 +396,12 @@ public class Controller
         timer.cancel();
       }
       if (button_url.equals("/")) {
-        url = Settings.ROOT_URL;
-        display(url);
+        url = Settings.ROOT_URL + "/index.html";
+        progress_controller(url);
       }
       else {
         url = Settings.ROOT_URL + "/" + button_url;
-        display(url);
+        progress_controller(url);
       }
     }
     else if (ae.getCommand() == select_command) { // nếu bấm nút "Chọn"
@@ -256,11 +409,11 @@ public class Controller
         timer.cancel();
       }
       /* lấy id của đối tượng được chọn (id bắt đầu từ 0) */
-      int index = Views.list.getSelectedIndex();
+      int index = list.getSelectedIndex();
 
       /* lấy url tương ứng với đối tượng được chọn */
-      url = (String) Views.href_list.elementAt(index);
-      display(url);
+      url = (String) href_list.elementAt(index);
+      progress_controller(url);
     }
     else if (ae.getCommand() == reload_command) {
       if (timer != null) { // dừng tự động refresh (nếu có)
@@ -297,8 +450,7 @@ public class Controller
       ex.printStackTrace();
     }
     UIManager.getInstance().setThemeProps(r.getTheme(Settings.THEME));
-
-    display(Settings.ROOT_URL);
+    progress_controller(Settings.ROOT_URL + "/index.html");
   }
 
   public void pauseApp() {
@@ -306,15 +458,17 @@ public class Controller
 
   public void destroyApp(boolean unconditional) {
     url = null;
+    recent_url = null;
     auto_refresh = null;
     button_url = null;
     timer = null;
     reload = null;
-    Views.list = null;
-    Views.cache = null;
-    Views.href_list = null;
-    Views.json = null;
-    Views.list = null;
+    list = null;
+    cache = null;
+    href_list = null;
+    json = null;
+    list = null;
+    status = 0;
 
   }
 }

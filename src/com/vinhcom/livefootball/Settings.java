@@ -22,12 +22,13 @@ public class Settings {
   public static final String RELOAD = "reload";
 
   /**
-   * Contants
+   * Constants
    */
   public static final String UPDATE_PATH = "http://localhost:4001/latest.jad";
   public static final String THEME_PATH = "/DefaultTheme.res";
   public static final String THEME = "default";
-  public static final String ROOT_URL = "http://localhost:4001";
+public static final String ROOT_URL = "http://203.128.246.60";
+//  public static final String ROOT_URL = "http://localhost:4001";
   public static final String INFO_SEPERATE_CHARACTER = "|";
 
   /**
