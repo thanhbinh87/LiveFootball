@@ -8,9 +8,11 @@ import javax.microedition.io.HttpConnection;
 import javax.wireless.messaging.MessageConnection;
 import javax.wireless.messaging.TextMessage;
 
+
 public class Models {
 
-  public static String replace(String text, String searchString, String replacementString) {
+  public static String replace(String text, String searchString,
+                               String replacementString) {
     StringBuffer sBuffer = new StringBuffer();
     int pos = 0;
     while ((pos = text.indexOf(searchString)) != -1) {
@@ -82,8 +84,10 @@ public class Models {
     }
   }
 
+
   /** Sends an SMS message */
-  public class SMSender implements Runnable {
+  public class SMSender
+          implements Runnable {
 
     private String smsReceiverPort;
     private String message;
@@ -108,7 +112,8 @@ public class Models {
         // Open the message connection.
         smsconn = (MessageConnection) Connector.open(address);
         // Create the message.
-        TextMessage txtmessage = (TextMessage) smsconn.newMessage(MessageConnection.TEXT_MESSAGE);
+        TextMessage txtmessage = (TextMessage) smsconn.newMessage(
+                MessageConnection.TEXT_MESSAGE);
         txtmessage.setAddress(address);// !!
         txtmessage.setPayloadText(message);
         smsconn.send(txtmessage);

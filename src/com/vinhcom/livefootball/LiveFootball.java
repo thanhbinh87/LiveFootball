@@ -24,7 +24,6 @@ import com.sun.lwuit.html.DocumentRequestHandler;
 import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.layouts.BorderLayout;
 import com.sun.lwuit.layouts.BoxLayout;
-import com.sun.lwuit.list.ListCellRenderer;
 import com.sun.lwuit.plaf.UIManager;
 import com.sun.lwuit.util.Resources;
 import java.util.Timer;
@@ -37,7 +36,7 @@ import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
 
-public class Controller
+public class LiveFootball
         extends MIDlet
         implements ActionListener {
 
@@ -45,23 +44,16 @@ public class Controller
    * Global Paramenters
    */
   private int status;
-  private String url;
-  private String recent_url;
-  private String auto_refresh;
-  private String button_url;
+  private String url, recent_url, auto_refresh, button_url;
   private Timer timer;
   private RefreshTimerTask reload;
-  private Command hyperlink_command;
-  private Command select_command;
-  private Command exit_command;
-  private Command reload_command;
+  private Command hyperlink_command, select_command, exit_command, reload_command;
   private Thread thread;
   private Vector href_list;
   private Form form;
   private List list;
   private JSONObject json;
   private Hashtable cache = new Hashtable();
-  
 
   /**
    * Display Elements:
@@ -74,8 +66,9 @@ public class Controller
    */
   public void list_display() {
     try {
+
       String form_title = json.getString(Settings.FORM_TITLE);
-     // font.drawString(form_title, status, status, status, null);
+      // font.drawString(form_title, status, status, status, null);
       form = new Form(form_title) {
 
         public void keyPressed(int key_code) {
@@ -98,23 +91,29 @@ public class Controller
         }
       };
 
-      form.setTransitionInAnimator(Transition3D.createCube(300, true));
+      form.setTransitionInAnimator(Transition3D.createCube(200, true));
       form.setLayout(new BorderLayout());
       href_list = new Vector();
+
+
       list = new List();
-     
+
       JSONArray items = json.getJSONArray(Settings.ITEMS);
       for (int i = 0; i < items.length(); i++) {
         JSONObject item = items.getJSONObject(i);
         String item_name = item.getString(Settings.ITEM_NAME);
         list.addItem(item_name);
+        list.isSmoothScrolling();
         String href = Settings.ROOT_URL + "/" + item.getString(
                 Settings.ITEM_HREF);
         href_list.addElement(href);
       }
 
+
+
       form.addComponent(BorderLayout.CENTER, list);
       form.show();
+
     }
     catch (JSONException ex) {
       ex.printStackTrace();
@@ -137,13 +136,6 @@ public class Controller
     catch (JSONException ex) {
       ex.printStackTrace();
     }
-  }
-
-
-
-  private void two_line_list_display() {
-//    list = new List();
-//    list.a
   }
 
   private void html_display() {
@@ -218,8 +210,6 @@ public class Controller
       String right_button_type = right_button.getString(Settings.BUTTON_TYPE);
       String right_button_name = right_button.getString(Settings.BUTTON_NAME);
 
-//      System.out.println("Left Button: " + left_button_type);
-//      System.out.println("Right Button: " + right_button_type);
 
       /**
        * Left Command
@@ -286,12 +276,10 @@ public class Controller
       content = (String) cache.get(url);
       System.out.println(content);
       if (content != null) {
-//        System.out.println(
-//                "Found cache for " + url);
       }
       if (content == null) {
         content = Models.urlopen(url);
-//        System.out.println("Getting new data from server for url: " + url);
+
       }
       json = new JSONObject(content);
 
@@ -315,10 +303,6 @@ public class Controller
         list_display();
         display_bottom_commands();
       }
-//      else if (type.equals(Settings.INFO)) {
-//        info_display();
-//        display_bottom_commands();
-//      }
       else if (type.equals(Settings.HTML)) {
         html_display();
         display_bottom_commands();
@@ -367,6 +351,7 @@ public class Controller
     if (cache.get(url) == null) {
       loading("Đang tải dữ liệu...");
       thread = new Thread() {
+
         public void run() {
           display(url);
         }
@@ -390,6 +375,8 @@ public class Controller
             "với chúng tôi. Rất mong được gặp lại bạn!");
       destroyApp(true);
       notifyDestroyed();
+
+
     }
     else if (ae.getCommand() == hyperlink_command) {
       if (timer != null) { // dừng tự động refresh (nếu có)
@@ -425,21 +412,6 @@ public class Controller
   }
 
   public void startApp() {
-//    try { // kiểm tra phiên bản mới
-//      String jad_content = Models.urlopen(update_path);
-//      String version = Models.get_text(jad_content, "MIDlet-Version: ", "\n");
-//      System.out.println(version);
-//      System.out.println(VERSION);
-//      if (version.trim().equals(VERSION.trim())) {
-//         System.out.println("không cần nâng cấp");
-//      }
-//      else {
-//        System.out.println("cần nâng cấp");
-//        // TODO: hiện thông báo hỏi cập nhật, nếu đồng ý thì tải, nếu không đồng ý chuyển biến VERSION thành phiên bản hiện tại
-//        platformRequest(update_path);
-//      }
-//    } catch (ConnectionNotFoundException ex) {
-//    }
 
     Display.init(this);
     Resources r = null;
